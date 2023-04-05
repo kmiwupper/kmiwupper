@@ -1,0 +1,114 @@
+
+import pandas as pd
+import psycopg2 as pg
+import yaml
+import datetime
+import numpy as np
+import csv
+import os
+def test_db():
+    db_conn = pg.connect(database='sensordb01',user='gast',password='wupperverband',host='192.168.105.112',port=5432)
+    listid = []
+    cursor = db_conn.cursor()
+    cursor.execute(f"""SELECT DISTINCT b.id from sitec.bb_handeingabe b""")
+    result = cursor.fetchall()
+    for i in result:
+        listid.append(i[0])
+    return listid
+
+def call(num):
+    db_conn = pg.connect(database='sensordb01', user='gast', password='wupperverband', host='192.168.105.112',port=5432)
+    cursor = db_conn.cursor()
+    cursor.execute(f"""SELECT DISTINCT b.wert, b.datum from sitec.bb_handeingabe b WHERE b.id = '{num}';""")
+    dat =pd.Series()
+    values = cursor.fetchall()
+    val2=[]
+    dates =[]
+
+    for i in values:
+        if (datetime.datetime.today()- i[1]).days <= 390:
+            val2.append(i[0])
+            dates.append(i[1])
+    lenth =len(val2)
+    return val2 ,lenth,dates
+
+
+
+def calc(list,lenth,dates,i):
+    Datas =pd.Series(list)
+
+    abweichung =Datas.std()
+    mini = Datas.min()
+    maxi = Datas.max()
+    print(mini,maxi)
+    print('Abweichung',abweichung)
+    maxd = max(dates)
+    mind = min(dates)
+    q1 = np.quantile(Datas,0.1)
+    q2 = np.quantile(Datas, 0.2)
+    q3 = np.quantile(Datas, 0.3)
+    q4 = np.quantile(Datas, 0.4)
+    q5 = np.quantile(Datas, 0.5)
+    q6 = np.quantile(Datas, 0.6)
+    q7 = np.quantile(Datas, 0.7)
+    q8 = np.quantile(Datas, 0.8)
+    q9 = np.quantile(Datas, 0.9)
+    print('prind data')
+  
+    ResultData =pd.DataFrame()
+    columns = ['fe_code', 'fe_bz', 'Messart', 'letzes messdatum', 'Erstes Messdatum', 'Anzahl Messwerte', 'Min', 'Max',
+               '0.1 Quantil', '0.2 Quantil', '0.3 Quantil', '0.4 Quantil', '0.5 Quantil', '0.6 Quantil', '0.7 Quantil',
+               '0.8 Quantil', '0.9 Quantil']
+    with open('OrderedDataResult.csv','r') as csvfile:
+        spamreader = csv.reader(csvfile)
+
+        for j in spamreader:
+            if j[1]==i:
+                if j[4]=='':
+                    print(j)
+                    j[4]=maxd
+                    j[5]=mind
+                    j[6]=lenth
+                    j[7]=mini
+                    j[8]=maxi
+
+                    j[9] = q1
+                    j[10] = q2
+                    j[11] = q3
+                    j[12] = q4
+                    j[13] = q5
+                    j[14] = q6
+                    j[15] = q7
+                    j[16] = q8
+                    j[17] = q9
+
+
+                else:
+                    print(j[4])
+                    print('The data is not empty')
+                    exit()
+                    
+            with open('OrderedDataResult-1.csv', 'a') as f:
+                writer = csv.writer(f)
+                # writer.writerow(columns)
+                writer.writerow(j)
+    return
+def writenewf(data):
+    columns=['fe_code', 'fe_bz','Messart', 'letzes messdatum', 'Erstes Messdatum','Anzahl Messwerte','Min','Max','0.1 Quantil','0.2 Quantil','0.3 Quantil','0.4 Quantil','0.5 Quantil','0.6 Quantil','0.7 Quantil','0.8 Quantil','0.9 Quantil']
+    with open('OrderedDataResult.csv', 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow(column_name)
+        writer.writerow(data)
+    return
+
+if __name__ == '__main__':
+    ids = test_db()
+
+
+for i in ids:
+    daten, llen,dates =call(i)
+    print(llen)
+    calc(daten,llen,dates,i)
+
+
+# See PyCharm help at https://www.jetbrains.com/help/pycharm/
