@@ -93,13 +93,7 @@ def calc(list,lenth,dates,i):
                 # writer.writerow(columns)
                 writer.writerow(j)
     return
-def writenewf(data):
-    columns=['fe_code', 'fe_bz','Messart', 'letzes messdatum', 'Erstes Messdatum','Anzahl Messwerte','Min','Max','0.1 Quantil','0.2 Quantil','0.3 Quantil','0.4 Quantil','0.5 Quantil','0.6 Quantil','0.7 Quantil','0.8 Quantil','0.9 Quantil']
-    with open('OrderedDataResult.csv', 'a') as f:
-        writer = csv.writer(f)
-        writer.writerow(column_name)
-        writer.writerow(data)
-    return
+
 
 if __name__ == '__main__':
     ids = test_db()
